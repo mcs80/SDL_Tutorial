@@ -8,8 +8,6 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
-const int TILE_SIZE = 40;
-
 void logSDLError(std::ostream &os, const std::string &msg){
 	os << msg << " error: " << SDL_GetError() << std::endl;
 }
@@ -68,42 +66,48 @@ int main(int argc, char** argv){
 	}
 
 	const std::string resPath = getResourcePath("Lessons");
-	SDL_Texture *background = loadTexture(resPath + "background.png", renderer);
 	SDL_Texture *image = loadTexture(resPath + "image.png", renderer);
 
-	if(background == nullptr || image == nullptr){
-		cleanup(background, image, renderer, window);
+	if(image == nullptr){
+		cleanup(image, renderer, window);
+		IMG_Quit();
 		SDL_Quit();
 		return 1;
 	}
 
 
-	for(int i = 0; i < 3; ++i){
-		SDL_RenderClear(renderer);
-
-		int xTiles = SCREEN_WIDTH / TILE_SIZE;
-		int yTiles = SCREEN_HEIGHT / TILE_SIZE;
-
-		for(int i = 0; i < xTiles * yTiles; i++){
-			int x = i % xTiles;
-			int y = i / xTiles;
-			renderTexture(background, renderer, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-		}
-
-		int iW, iH;
-		SDL_QueryTexture(image, NULL, NULL, &iW, &iH);
-		int x = SCREEN_WIDTH / 2 - iW / 2;
-		int y = SCREEN_HEIGHT / 2 - iH / 2;
-		renderTexture(image, renderer, x, y);
-
-		SDL_RenderPresent(renderer);
-		SDL_Delay(3000);
-	}
-
+	int iW, iH;
+	SDL_QueryTexture(image, NULL, NULL, &iW, &iH);
+	int x = SCREEN_WIDTH / 2 - iW / 2;
+	int y = SCREEN_HEIGHT / 2 - iH / 2;
 	
 
+	SDL_Event e;
 
-	cleanup(background, image, renderer, window);
+	bool quit = false;
+
+	while(!quit){
+		while(SDL_PollEvent(&e)){
+			if(e.type == SDL_QUIT){
+				quit = true;
+			}
+
+			if(e.type == SDL_KEYDOWN){
+				quit = true;
+			}
+
+			if(e.type == SDL_MOUSEBUTTONDOWN){
+				quit = true;
+			}
+		}
+
+		SDL_RenderClear(renderer);
+		renderTexture(image, renderer, x, y);
+		SDL_RenderPresent(renderer);
+	}
+
+
+	cleanup(image, renderer, window);
 	IMG_Quit();
 	SDL_Quit();
 	return 0;
